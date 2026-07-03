@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lexis — Smart Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0f0e11;
+    --bg2: #171520;
+    --bg3: #1e1c2a;
+    --bg4: #252337;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text1: #f0eef8;
+    --text2: #a8a4c0;
+    --text3: #6e6a88;
+    --accent: #9d8fff;
+    --accent2: #c4b5fd;
+    --accent-bg: rgba(157,143,255,0.12);
+    --accent-bg2: rgba(157,143,255,0.06);
+    --green: #6ee7b7;
+    --green-bg: rgba(110,231,183,0.1);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.1);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'Instrument Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 5px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text1);
+    font-family: var(--sans);
+    overflow: hidden;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── LAYOUT ── */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 52px 1fr;
+    height: 100vh;
+    grid-template-areas:
+      "topbar topbar"
+      "sidebar main";
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    grid-area: topbar;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    gap: 16px;
+    z-index: 10;
+  }
+  .topbar-logo {
+    display: flex; align-items: center; gap: 9px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #9d8fff 0%, #c4b5fd 100%);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 15px; height: 15px; }
+  .logo-name {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--text1);
+    letter-spacing: .01em;
+  }
+  .topbar-divider {
+    width: 1px; height: 20px;
+    background: var(--border2);
+    flex-shrink: 0;
+  }
+  .topbar-tag {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .topbar-spacer { flex: 1; }
+  .topbar-stats {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .stat-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text2);
+    padding: 4px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+  }
+  .stat-pill span.num { color: var(--accent); font-weight: 500; }
+  .topbar-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #9d8fff 0%, #6ee7b7 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #fff;
+    flex-shrink: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-head {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .new-btn {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%;
+    padding: 9px 14px;
+    background: var(--accent-bg);
+    border: 1px solid rgba(157,143,255,0.25);
+    border-radius: var(--radius-sm);
+    color: var(--accent2);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .new-btn:hover { background: rgba(157,143,255,0.18); border-color: rgba(157,143,255,0.4); }
+  .new-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .search-wrap {
+    position: relative;
+    margin-top: 8px;
+  }
+  .search-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--text3);
+    pointer-events: none;
+  }
+  .search-icon svg { width: 14px; height: 14px; }
+  .search-input {
+    width: 100%;
+    padding: 7px 10px 7px 32px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text1);
+    font-size: 12.5px;
+    font-family: var(--sans);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-input::placeholder { color: var(--text3); }
+  .search-input:focus { border-color: var(--border2); }
+
+  .sidebar-label {
+    padding: 10px 14px 5px;
+    font-size: 10px;
+    font-family: var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 500;
+  }
+  .note-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 12px;
+  }
+  .note-list::-webkit-scrollbar { width: 3px; }
+  .note-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .note-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background .12s;
+    position: relative;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .note-item:hover { background: var(--bg3); }
+  .note-item.active {
+    background: var(--bg3);
+    border-color: var(--border);
+  }
+  .note-item-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    margin-top: 5px;
+    opacity: 0.7;
+  }
+  .note-item-content { flex: 1; min-width: 0; }
+  .note-item-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+  .note-item-meta {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+  .note-item-del {
+    background: none; border: none;
+    color: var(--text3); cursor: pointer;
+    padding: 2px; opacity: 0;
+    transition: opacity .12s, color .12s;
+    flex-shrink: 0;
+  }
+  .note-item:hover .note-item-del { opacity: 1; }
+  .note-item-del:hover { color: var(--red); }
+  .note-item-del svg { width: 13px; height: 13px; display: block; }
+  .sidebar-empty {
+    padding: 30px 14px;
+    text-align: center;
+    color: var(--text3);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .sidebar-empty svg {
+    width: 28px; height: 28px;
+    margin: 0 auto 8px;
+    display: block;
+    opacity: 0.4;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Generate bar */
+  .gen-bar {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .gen-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .gen-input {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text1);
+    font-size: 14px;
+    font-family: var(--sans);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .gen-input::placeholder { color: var(--text3); }
+  .gen-input:focus {
+    border-color: rgba(157,143,255,0.4);
+    box-shadow: 0 0 0 3px rgba(157,143,255,0.08);
+  }
+  .gen-input:disabled { opacity: 0.5; }
+  .gen-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 10px 20px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #0f0e11;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .gen-btn:hover { background: var(--accent2); }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; background: var(--accent); }
+  .gen-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .gen-progress {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px;
+    color: var(--text2);
+    padding-left: 2px;
+    font-family: var(--mono);
+  }
+  .progress-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+  .err-msg {
+    font-size: 12px;
+    color: var(--red);
+    padding-left: 2px;
+    font-family: var(--mono);
+  }
+
+  /* Note viewer */
+  .note-viewer {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 40px 48px;
+  }
+  .note-viewer::-webkit-scrollbar { width: 4px; }
+  .note-viewer::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  /* Empty state */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    padding: 40px;
+    animation: fadeUp .4s ease;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .empty-icon {
+    width: 60px; height: 60px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 4px;
+  }
+  .empty-icon svg { width: 26px; height: 26px; opacity: .5; }
+  .empty-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--text1);
+    text-align: center;
+  }
+  .empty-sub {
+    font-size: 13px;
+    color: var(--text3);
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.7;
+  }
+  .empty-examples {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .ex-chip {
+    padding: 5px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .15s;
+    font-family: var(--mono);
+  }
+  .ex-chip:hover {
+    border-color: rgba(157,143,255,0.35);
+    color: var(--accent2);
+    background: var(--accent-bg2);
+  }
+
+  /* Note content */
+  .note-content { max-width: 760px; animation: fadeUp .3s ease; }
+  .note-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .note-title-wrap {}
+  .note-mark-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-family: var(--mono);
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--green-bg);
+    color: var(--green);
+    border: 1px solid rgba(110,231,183,0.2);
+    margin-bottom: 10px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .note-title {
+    font-family: var(--serif);
+    font-size: 32px;
+    color: var(--text1);
+    line-height: 1.2;
+    letter-spacing: -.01em;
+  }
+  .note-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 6px;
+  }
+  .lang-toggle {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .lang-btn {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .lang-btn.active {
+    background: var(--accent);
+    color: #0f0e11;
+  }
+  .lang-btn:not(.active):hover { background: var(--bg4); color: var(--text1); }
+
+  /* Note body */
+  .note-intro {
+    font-size: 15px;
+    color: var(--text2);
+    line-height: 1.8;
+    border-left: 2px solid var(--accent);
+    padding-left: 16px;
+    margin-bottom: 28px;
+    font-style: italic;
+  }
+  .note-section {
+    margin-bottom: 22px;
+  }
+  .section-header {
+    display: flex; align-items: center; gap: 9px;
+    margin-bottom: 10px;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid rgba(157,143,255,0.2);
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 500;
+  }
+  .section-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+  .note-bullets {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .note-bullet {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.75;
+    padding: 8px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    transition: border-color .12s;
+  }
+  .note-bullet:hover { border-color: var(--border2); }
+  .bullet-arrow {
+    color: var(--accent);
+    font-size: 13px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .note-bullet strong { color: var(--text1); font-weight: 500; }
+  .note-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 28px;
+    padding: 14px 18px;
+    background: var(--amber-bg);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .tip-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .note-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+    background-size: 200% 100%;
+    border-radius: 6px;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* Scrollbar hidden for main */
+  .main::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 20 20" fill="none">
+          <path d="M4 5h12M4 10h8M4 15h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="logo-name">Lexis</span>
+    </div>
+    <div class="topbar-divider"></div>
+    <span class="topbar-tag">Smart Notes</span>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-stats">
+      <div class="stat-pill"><span class="num" id="note-count">0</span> notes</div>
+      <div class="stat-pill">English · Hinglish</div>
+    </div>
+    <div class="topbar-avatar">A</div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <button class="new-btn" id="focus-gen-btn">
+        <svg viewBox="0 0 20 20" fill="none">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        New note
+      </button>
+      <div class="search-wrap">
+        <span class="search-icon">
+          <svg viewBox="0 0 20 20" fill="none">
+            <circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <input class="search-input" id="search-input" placeholder="Search notes..." type="text"/>
+      </div>
+    </div>
+    <div class="sidebar-label">All Notes</div>
+    <div class="note-list" id="note-list">
+      <div class="sidebar-empty">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4a2 2 0 012-2h2a2 2 0 012 2v0a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Generate your first<br>note above
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="gen-bar">
+      <div class="gen-row">
+        <input class="gen-input" id="topic-input" placeholder="Enter a topic — e.g. Neural Networks, Recursion, OSI Model, Sorting Algorithms..." type="text"/>
+        <button class="gen-btn" id="gen-btn">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M10 2l1.76 5.41L17 9l-5.24 1.59L10 16l-1.76-5.41L3 9l5.24-1.59L10 2z" fill="currentColor"/>
+          </svg>
+          Generate
+        </button>
+      </div>
+      <div class="gen-progress" id="gen-progress" style="display:none">
+        <div class="progress-dot"></div>
+        <span id="gen-msg">Generating your notes...</span>
+      </div>
+      <div class="err-msg" id="err-msg" style="display:none"></div>
+    </div>
+
+    <div class="note-viewer" id="note-viewer">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5L13.5 11H18l-3.7 2.7 1.4 4.3L12 15.3l-3.7 2.7 1.4-4.3L6 11h4.5L12 6.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 class="empty-title">What are you studying today?</h2>
+        <p class="empty-sub">Type any topic above and get comprehensive 15-mark exam notes in English and Hinglish — auto-saved forever.</p>
+        <div class="empty-examples">
+          <span class="ex-chip" data-topic="Backpropagation">Backpropagation</span>
+          <span class="ex-chip" data-topic="Blockchain Technology">Blockchain</span>
+          <span class="ex-chip" data-topic="Operating System Scheduling">OS Scheduling</span>
+          <span class="ex-chip" data-topic="Binary Search Tree">Binary Search Tree</span>
+          <span class="ex-chip" data-topic="TCP/IP Protocol">TCP/IP</span>
+          <span class="ex-chip" data-topic="SQL vs NoSQL">SQL vs NoSQL</span>
+        </div>
+      </div>
+      <div class="note-content" id="note-content" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const IDX_KEY = "lexis_index_v1";
+let allNotes = [];
+let activeSlug = null;
+let activeNote = null;
+let activeLang = "english";
+let generating = false;
+let msgInterval = null;
+
+const LOADING_MSGS = [
+  "Consulting the AI professor...",
+  "Structuring your 15-mark answer...",
+  "Translating to Hinglish...",
+  "Formatting sections and bullets...",
+  "Polishing the exam tip...",
+];
+
+const SYSTEM_PROMPT = `You are an expert academic notes generator. Generate comprehensive exam-style notes (15-mark format) on any topic.
+Return ONLY a valid JSON object, no markdown, no backticks, no preamble, no explanation.
+
+JSON structure:
+{
+  "english": {
+    "intro": "2-3 sentence academic introduction",
+    "sections": [
+      { "title": "SECTION TITLE", "bullets": ["**Key term**: detailed explanation.", "another point with detail"] }
+    ],
+    "tip": "One specific exam writing tip for this topic"
+  },
+  "hinglish": {
+    "intro": "2-3 sentence introduction in Hinglish (Roman script Hindi-English mix)",
+    "sections": [
+      { "title": "SECTION TITLE", "bullets": ["**Key term**: Hinglish explanation.", "aur ek point Hinglish mein"] }
+    ],
+    "tip": "Exam tip in Hinglish"
+  }
+}
+
+Rules:
+- English: ~600 words total, formal academic, bold **key terms** with double asterisks
+- Hinglish: ~600 words, natural Hinglish Roman script (mix Hindi + English naturally), same structure
+- 5-6 sections each with 3-5 bullets
+- Cover: definition, types/classification, mechanism/working, advantages+disadvantages, applications
+- Bold key terms with **term** syntax in all bullets
+- Exam-grade depth, suitable for university 15-mark answers`;
+
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/(^_|_$)/g,'').slice(0,60);
+}
+function fmt(ts) {
+  return new Date(ts).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+}
+
+// Storage helpers
+async function storageGet(key) {
+  try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; }
+  catch(e) { return null; }
+}
+async function storageSet(key, val) {
+  try { await window.storage.set(key, JSON.stringify(val)); } catch(e) {}
+}
+async function storageDel(key) {
+  try { await window.storage.delete(key); } catch(e) {}
+}
+
+// Bold formatter
+function renderBold(text) {
+  if (!text) return '';
+  return String(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+}
+
+// Render note list
+function renderSidebar() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const filtered = allNotes.filter(n => n.topic.toLowerCase().includes(search));
+  const list = document.getElementById('note-list');
+  document.getElementById('note-count').textContent = allNotes.length;
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="sidebar-empty"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4a2 2 0 012-2h2a2 2 0 012 2v0a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${search ? 'No matches found' : 'No notes yet.<br>Generate your first note!'}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(n => `
+    <div class="note-item${n.slug===activeSlug?' active':''}" data-slug="${n.slug}">
+      <div class="note-item-dot"></div>
+      <div class="note-item-content">
+        <div class="note-item-title">${n.topic}</div>
+        <div class="note-item-meta">${fmt(n.timestamp)}</div>
+      </div>
+      <button class="note-item-del" data-del="${n.slug}" title="Delete">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M13 4l-.8 9a1 1 0 01-1 .9H4.8a1 1 0 01-1-.9L3 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>`).join('');
+
+  list.querySelectorAll('.note-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.note-item-del')) return;
+      loadNote(el.dataset.slug);
+    });
+  });
+  list.querySelectorAll('.note-item-del').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); deleteNote(btn.dataset.del); });
+  });
+}
+
+// Render note content
+function renderNote() {
+  const el = document.getElementById('note-content');
+  const empty = document.getElementById('empty-state');
+  if (!activeNote || !activeNote[activeLang]) {
+    el.style.display = 'none'; empty.style.display = 'flex'; return;
+  }
+  el.style.display = 'block'; empty.style.display = 'none';
+  const d = activeNote[activeLang];
+  const sectionsHtml = (d.sections||[]).map((sec, i) => `
+    <div class="note-section">
+      <div class="section-header">
+        <span class="section-num">${String(i+1).padStart(2,'0')}</span>
+        <span class="section-title">${sec.title||''}</span>
+      </div>
+      <ul class="note-bullets">
+        ${(sec.bullets||[]).map(b=>`
+          <li class="note-bullet">
+            <span class="bullet-arrow">›</span>
+            <span>${renderBold(b)}</span>
+          </li>`).join('')}
+      </ul>
+    </div>`).join('<hr class="note-divider">');
+
+  el.innerHTML = `
+    <div class="note-header">
+      <div class="note-title-wrap">
+        <div class="note-mark-badge">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="currentColor"/></svg>
+          15 Marks
+        </div>
+        <h1 class="note-title">${activeNote.topic}</h1>
+        <div class="note-date">Generated ${fmt(activeNote.timestamp)}</div>
+      </div>
+      <div class="lang-toggle">
+        <button class="lang-btn${activeLang==='english'?' active':''}" data-lang="english">English</button>
+        <button class="lang-btn${activeLang==='hinglish'?' active':''}" data-lang="hinglish">Hinglish</button>
+      </div>
+    </div>
+    <p class="note-intro">${renderBold(d.intro||'')}</p>
+    ${sectionsHtml}
+    ${d.tip ? `<div class="note-tip"><span class="tip-icon">💡</span><span>${renderBold(d.tip)}</span></div>` : ''}`;
+
+  el.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => { activeLang = btn.dataset.lang; renderNote(); renderSidebar(); });
+  });
+}
+
+async function loadNote(slug) {
+  const note = await storageGet(`lexis_note_${slug}`);
+  if (!note) return;
+  activeSlug = slug; activeNote = note;
+  renderSidebar(); renderNote();
+  document.getElementById('note-viewer').scrollTop = 0;
+}
+
+async function deleteNote(slug) {
+  await storageDel(`lexis_note_${slug}`);
+  allNotes = allNotes.filter(n => n.slug !== slug);
+  await storageSet(IDX_KEY, allNotes);
+  if (activeSlug === slug) { activeSlug = null; activeNote = null; renderNote(); }
+  renderSidebar();
+}
+
+async function generate() {
+  const inp = document.getElementById('topic-input');
+  const topic = inp.value.trim();
+  if (!topic || generating) return;
+  const slug = slugify(topic);
+  generating = true;
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('topic-input').disabled = true;
+  document.getElementById('err-msg').style.display = 'none';
+  document.getElementById('gen-progress').style.display = 'flex';
+  let mi = 0;
+  document.getElementById('gen-msg').textContent = LOADING_MSGS[0];
+  msgInterval = setInterval(() => { mi=(mi+1)%LOADING_MSGS.length; document.getElementById('gen-msg').textContent=LOADING_MSGS[mi]; }, 2200);
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: `Generate comprehensive exam notes for: "${topic}"` }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content.map(i=>i.text||'').join('');
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    const noteData = { topic, slug, timestamp: Date.now(), english: parsed.english, hinglish: parsed.hinglish };
+    await storageSet(`lexis_note_${slug}`, noteData);
+    allNotes = [{ slug, topic, timestamp: Date.now() }, ...allNotes.filter(n=>n.slug!==slug)];
+    await storageSet(IDX_KEY, allNotes);
+    activeSlug = slug; activeNote = noteData; activeLang = 'english';
+    inp.value = '';
+    renderSidebar(); renderNote();
+    document.getElementById('note-viewer').scrollTop = 0;
+  } catch(e) {
+    const err = document.getElementById('err-msg');
+    err.textContent = '✕ Generation failed — ' + (e.message || 'check your connection and try again.');
+    err.style.display = 'block';
+  } finally {
+    clearInterval(msgInterval);
+    document.getElementById('gen-progress').style.display = 'none';
+    document.getElementById('gen-btn').disabled = false;
+    document.getElementById('topic-input').disabled = false;
+    generating = false;
+  }
+}
+
+// Init
+(async () => {
+  allNotes = await storageGet(IDX_KEY) || [];
+  renderSidebar();
+  if (allNotes.length > 0) loadNote(allNotes[0].slug);
+})();
+
+document.getElementById('gen-btn').addEventListener('click', generate);
+document.getElementById('topic-input').addEventListener('keydown', e => { if(e.key==='Enter') generate(); });
+document.getElementById('search-input').addEventListener('input', renderSidebar);
+document.getElementById('focus-gen-btn').addEventListener('click', () => document.getElementById('topic-input').focus());
+document.querySelectorAll('.ex-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.getElementById('topic-input').value = chip.dataset.topic;
+    document.getElementById('topic-input').focus();
+  });
+});
+</script>
+</body>
+</html>
